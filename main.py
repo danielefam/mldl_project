@@ -5,6 +5,7 @@ from models.customnet import CustomNet
 from torch import nn
 from train import train
 from eval import validate
+import wandb
 
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
@@ -24,20 +25,29 @@ val_loader = torch.utils.data.DataLoader(tiny_imagenet_dataset_val, batch_size=1
 
 model = CustomNet().cuda()
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+
+wandb.init()
+
+config = wandb.config
+config.learning_rate = 0.001
+config.momentum = 0.9
+
+optimizer = torch.optim.SGD(model.parameters(), lr=config.learning_rate, momentum=config.momentum)
 
 best_acc = 0
+
 
 # Run the training process for {num_epochs} epochs
 num_epochs = 10
 for epoch in range(1, num_epochs + 1):
-    train(epoch, model, train_loader, criterion, optimizer)
+    train_accuracy = train(epoch, model, train_loader, criterion, optimizer)
 
     # At the end of each training iteration, perform a validation step
     val_accuracy = validate(model, val_loader, criterion)
-
+    wandb.log({"val_accuracy": val_accuracy, "train_accuracy": train_accuracy})
+    
     # Best validation accuracy
-    best_acc = max(best_acc, val_accuracy)
+    best_acc = max(best_acc, val_accuracy)    
 
 
 print(f'Best validation accuracy: {best_acc:.2f}%')

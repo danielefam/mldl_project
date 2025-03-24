@@ -31,8 +31,7 @@ class CustomNet(nn.Module):
             nn.ReLU(),
             nn.Linear(2048, 2048),
             nn.ReLU(),
-            nn.Linear(2048, 200),
-            nn.Softmax(1)
+            nn.Linear(2048, 200)
         )
 
     def forward(self, x):
